@@ -1,18 +1,17 @@
 import os
 import json
+import yaml
 import textwrap
-import google.generativeai as genai
+from vertexai.preview.generative_models import GenerativeModel
+from vertexai import init
 
 
-# ✅ Vertex AI Gemini client setup
-client = genai.Client(
-    vertexai=True,
-    project="skysuitesbookingapp-7f085",
-    location="global",
-)
+# ✅ Initialize Vertex AI
+init(project="skysuitesbookingapp-7f085", location="us-east1")
 
-# ✅ Gemini model to use
-MODEL_NAME = "gemini-2.5-flash-lite"
+# ✅ Load Gemini model
+MODEL_NAME = "gemini-2.5-flash-lite"  # or your preferred model
+model = GenerativeModel(MODEL_NAME)
 
 def load_policy_text(airline: str, policy_dir: str = r"C:\Users\PMLS\Downloads\ocr_project\app\policy_docs") -> str:
     path = os.path.join(policy_dir, f"{airline.lower().strip()}.yaml")
@@ -25,29 +24,10 @@ def extract_fields_from_text(ocr_text: str, doc_type: str, airline: str) -> dict
     policy_text = load_policy_text(airline)
     prompt = build_prompt(doc_type, ocr_text, policy_text)
 
-    contents = [
-        genai.types.Content(
-            role="user",
-            parts=[
-                genai.types.Part(text=prompt)
-            ]
-        )
-    ]
-
-    config = genai.types.GenerateContentConfig(
-        temperature=0.7,
-        top_p=0.9,
-        max_output_tokens=2048
-    )
-
     try:
-        response = client.models.generate_content(
-            model=MODEL_NAME,
-            contents=contents,
-            config=config
-        )
+        response = model.generate_content(prompt)
 
-        raw_text = response.candidates[0].content.parts[0].text
+        raw_text = response.text
 
         json_start = raw_text.find('{')
         json_end = raw_text.rfind('}') + 1
