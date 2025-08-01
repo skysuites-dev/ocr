@@ -1,8 +1,8 @@
 import os
 import json
 import textwrap
-from google import genai
-from google.genai import types
+import google.generativeai as genai
+
 
 # ✅ Vertex AI Gemini client setup
 client = genai.Client(
@@ -26,15 +26,15 @@ def extract_fields_from_text(ocr_text: str, doc_type: str, airline: str) -> dict
     prompt = build_prompt(doc_type, ocr_text, policy_text)
 
     contents = [
-        types.Content(
+        genai.types.Content(
             role="user",
             parts=[
-                types.Part(text=prompt)
+                genai.types.Part(text=prompt)
             ]
         )
     ]
 
-    config = types.GenerateContentConfig(
+    config = genai.types.GenerateContentConfig(
         temperature=0.7,
         top_p=0.9,
         max_output_tokens=2048
